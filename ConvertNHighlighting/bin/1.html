@@ -1,0 +1,245 @@
+<html><body><pre><font color=blue>
+</font><font color=navy><b>import</b></font><font color=blue> java.io.*;
+</font><font color=navy><b>import</b></font><font color=blue> java.util.*;
+</font><font color=navy><b>import</b></font><font color=blue> java.util.regex.*;
+</font><font color=navy><b>public</b></font><font color=blue> </font><font color=navy><b>class</b></font><font color=blue> ConvertNHighlighting {
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> File sourceFile,targetFile;
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> Scanner input;
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> PrintWriter output;
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> String generalStyleColor="blue";
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> String commentStyleColor="green";
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> String keywordStyleColor="navy";
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> </font><font color=navy><b>boolean</b></font><font color=blue> generalStyleBold=false,generalStyleItalic=false;
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> </font><font color=navy><b>boolean</b></font><font color=blue> commentStyleBold=false,commentStyleItalic=false;
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> </font><font color=navy><b>boolean</b></font><font color=blue> keywordStyleBold=true,keywordStyleItalic=false;
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> </font><font color=navy><b>boolean</b></font><font color=blue> Comment=false;
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> String keywords[]= {"abstract","assert","boolean","break","byte","case","catch","char","class","const","continue","default","do","double","else","enum","extends","final","finally","float","for","goto","if","implements","import","instanceof","int","interface","long","native","new","package","private","protected","public","return","strictfp","short","static","super","switch","synchronized","this","throw","throws","transient","try","void","volatile","while"};
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> </font><font color=navy><b>void</b></font><font color=blue> displayUsage() {
+		System.out.println("Usage: java ConvertNHighlighting javaFilename htmlFilename");
+	}
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> String Head(String colorStyle,</font><font color=navy><b>boolean</b></font><font color=blue> isHeadOfHtml,</font><font color=navy><b>boolean</b></font><font color=blue> isBold,</font><font color=navy><b>boolean</b></font><font color=blue> isItalic){
+		String s="";
+		</font><font color=navy><b>if</b></font><font color=blue>(isHeadOfHtml)s+="&lthtml&gt&ltbody&gt&ltpre&gt"; A good "//compiler" should be </font><font color=green>/*able*/</font><font color=blue> to deal </font><font color=green>/*with all</font><font color=blue>
+</font><font color=green>		complicated, nested cases.*/</font><font color=blue> It should not get frustrated "with all the possible// illegal" </font><font color=green>//terms.</font><font color=blue>
+		s=s+"&ltfont color="+colorStyle+"&gt";
+		</font><font color=navy><b>if</b></font><font color=blue>(isBold)s+="&ltb&gt";"//
+		</font><font color=navy><b>if</b></font><font color=blue>(isItalic)s+="&lti&gt";
+		</font><font color=navy><b>return</b></font><font color=blue> s;
+	}
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> String Tail(</font><font color=navy><b>boolean</b></font><font color=blue> isTailOfHtml,</font><font color=navy><b>boolean</b></font><font color=blue> isBold,</font><font color=navy><b>boolean</b></font><font color=blue> isItalic){
+		String s="";
+		</font><font color=navy><b>if</b></font><font color=blue>(isItalic)s+="&lt/i&gt";
+		</font><font color=navy><b>if</b></font><font color=blue>(isBold)s+="&lt/b&gt";
+		s+="&lt/font&gt";
+		</font><font color=navy><b>if</b></font><font color=blue>(isTailOfHtml)s+="&lt/pre&gt&lt/body&gt&lt/html&gt";
+		</font><font color=navy><b>return</b></font><font color=blue> s;
+	}
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> String getComment(String s) {
+		</font><font color=navy><b>return</b></font><font color=blue> Tail(false,generalStyleBold,generalStyleItalic)+Head(commentStyleColor,false,commentStyleBold,commentStyleItalic)+s+Tail(false,commentStyleBold,commentStyleItalic)+Head(generalStyleColor,false,generalStyleBold,generalStyleItalic);
+	}
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> String getHighlight(String s) {
+		</font><font color=navy><b>return</b></font><font color=blue> Tail(false,generalStyleBold,generalStyleItalic)+Head(keywordStyleColor,false,keywordStyleBold,keywordStyleItalic)+s+Tail(false,keywordStyleBold,keywordStyleItalic)+Head(generalStyleColor,false,generalStyleBold,generalStyleItalic);
+	}
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> String preprocess(String s) {
+		s=s.replace("&amp", "&ampamp");
+		s=s.replace("&lt", "&amplt");
+		s=s.replace("&gt", "&ampgt");
+		</font><font color=navy><b>return</b></font><font color=blue> s;
+	}
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> String toHtml(String s,</font><font color=navy><b>boolean</b></font><font color=blue> isComment) {
+		</font><font color=navy><b>if</b></font><font color=blue>(isComment) {
+			String p="\\x2a\\x2f.*$";
+			Pattern pat=Pattern.compile(p);
+			Matcher mat=pat.matcher(s);
+			</font><font color=navy><b>if</b></font><font color=blue>(mat.find()) {
+				Comment=false;
+				String[] sub=s.split(p);
+				</font><font color=navy><b>return</b></font><font color=blue> getComment(sub[0]+"*/")+toHtml(mat.group().substring(2),Comment);
+			}
+			</font><font color=navy><b>else</b></font><font color=blue> {
+				Comment=true;
+				</font><font color=navy><b>return</b></font><font color=blue> getComment(s);
+			}
+		}
+		</font><font color=navy><b>else</b></font><font color=blue> {
+			</font><font color=navy><b>int</b></font><font color=blue> len=s.length();
+			</font><font color=navy><b>int</b></font><font color=blue> i=getUnquotedSlashPlus(s);
+			Comment=false;
+			</font><font color=navy><b>if</b></font><font color=blue>(i&lt0) {
+				</font><font color=navy><b>return</b></font><font color=blue> processLiterals(s,false,false);
+			}
+			</font><font color=navy><b>else</b></font><font color=blue> </font><font color=navy><b>if</b></font><font color=blue>(i&ltlen) {
+				</font><font color=navy><b>return</b></font><font color=blue> processLiterals(s.substring(0, i),false,false)+getComment(s.substring(i));
+			}
+			</font><font color=navy><b>else</b></font><font color=blue> {
+				Comment=true;
+				</font><font color=navy><b>return</b></font><font color=blue> processLiterals(s.substring(0, i-len),false,false)+toHtml(s.substring(i-len),Comment);
+			}
+		}
+	}
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> </font><font color=navy><b>int</b></font><font color=blue> getUnquotedSlashPlus(String s) {
+		</font><font color=navy><b>int</b></font><font color=blue> len=s.length();
+		</font><font color=navy><b>boolean</b></font><font color=blue> inQuote=false;
+		</font><font color=navy><b>boolean</b></font><font color=blue> quoteType=false;
+		</font><font color=navy><b>for</b></font><font color=blue>(</font><font color=navy><b>int</b></font><font color=blue> i=0;i&ltlen;i++) {
+			</font><font color=navy><b>if</b></font><font color=blue>(!inQuote) {
+				</font><font color=navy><b>if</b></font><font color=blue>(s.charAt(i)=='\'') {
+					inQuote=true;
+					quoteType=false;
+				}
+				</font><font color=navy><b>else</b></font><font color=blue> </font><font color=navy><b>if</b></font><font color=blue>(s.charAt(i)=='\"') {
+					inQuote=true;
+					quoteType=true;
+				}
+				</font><font color=navy><b>else</b></font><font color=blue> </font><font color=navy><b>if</b></font><font color=blue>(s.charAt(i)=='/' &amp&amp i&ltlen-1) {
+					</font><font color=navy><b>if</b></font><font color=blue>(s.charAt(i+1)=='/') {
+						</font><font color=navy><b>return</b></font><font color=blue> i;
+					}
+					</font><font color=navy><b>else</b></font><font color=blue> </font><font color=navy><b>if</b></font><font color=blue>(s.charAt(i+1)=='*') {
+						</font><font color=navy><b>return</b></font><font color=blue> i+len;
+					}
+				}
+			}
+			</font><font color=navy><b>else</b></font><font color=blue> {
+				</font><font color=navy><b>if</b></font><font color=blue>(s.charAt(i)=='\'' &amp&amp s.charAt(i-1)!='\\' &amp&amp quoteType==false) {
+					inQuote=false;
+				}
+				</font><font color=navy><b>else</b></font><font color=blue> </font><font color=navy><b>if</b></font><font color=blue>(s.charAt(i)=='\"' &amp&amp s.charAt(i-1)!='\\' &amp&amp quoteType==true) {
+					inQuote=false;
+				}
+			}
+		}
+		</font><font color=navy><b>return</b></font><font color=blue> -1;
+	}
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> String processLiterals(String s,</font><font color=navy><b>boolean</b></font><font color=blue> inQuote,</font><font color=navy><b>boolean</b></font><font color=blue> quoteType) {</font><font color=green>//unquoted, separated by legal terms $ _ " ' num</font><font color=blue>
+		</font><font color=navy><b>if</b></font><font color=blue>(!inQuote) {
+			String p="\".*|\'.*";
+			Pattern pat=Pattern.compile(p);
+			Matcher mat=pat.matcher(s);
+			</font><font color=navy><b>if</b></font><font color=blue>(mat.find()) {
+				inQuote=true;
+				String sub[]=s.split(p);
+				String recur=mat.group();
+				</font><font color=navy><b>if</b></font><font color=blue>(recur.charAt(0)=='\'') {
+					quoteType=false;
+				}
+				</font><font color=navy><b>else</b></font><font color=blue> {
+					quoteType=true;
+				}
+				</font><font color=navy><b>if</b></font><font color=blue>(sub.length&gt0) {
+					</font><font color=navy><b>return</b></font><font color=blue> keywordsHighlighting(sub[0])+recur.charAt(0)+processLiterals(recur.substring(1),inQuote,quoteType);
+				}
+				</font><font color=navy><b>else</b></font><font color=blue> {
+					</font><font color=navy><b>return</b></font><font color=blue> recur.charAt(0)+processLiterals(recur.substring(1),inQuote,quoteType);
+				}
+			}
+			</font><font color=navy><b>else</b></font><font color=blue> {
+				</font><font color=navy><b>return</b></font><font color=blue> keywordsHighlighting(s);
+			}
+		}
+		</font><font color=navy><b>else</b></font><font color=blue> {
+			String p,c;
+			</font><font color=navy><b>if</b></font><font color=blue>(quoteType) {
+				p="\".*";
+				c="\"";
+			}
+			</font><font color=navy><b>else</b></font><font color=blue> {
+				p="\'.*";
+				c="\'";
+			}
+			Pattern pat=Pattern.compile(p);
+			Matcher mat=pat.matcher(s);
+			</font><font color=navy><b>if</b></font><font color=blue>(mat.find()) {
+				inQuote=false;
+				String sub[]=s.split(p);
+				String recur=mat.group();
+				</font><font color=navy><b>if</b></font><font color=blue>(sub.length&gt0) {
+					</font><font color=navy><b>return</b></font><font color=blue> sub[0]+c+processLiterals(recur.substring(1),inQuote,quoteType);
+				}
+				</font><font color=navy><b>else</b></font><font color=blue> {
+					</font><font color=navy><b>return</b></font><font color=blue> c+processLiterals(recur.substring(1),inQuote,quoteType);
+				}
+			}
+			</font><font color=navy><b>else</b></font><font color=blue> {
+				</font><font color=navy><b>return</b></font><font color=blue> s;
+			}
+		}
+	}
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> String keywordsHighlighting(String s) {
+		String result="";
+		String p="";
+		</font><font color=navy><b>for</b></font><font color=blue>(</font><font color=navy><b>int</b></font><font color=blue> i=0;i&ltkeywords.length-1;i++) {
+			p+="\\b"+keywords[i]+"\\b"+"|";
+		}
+		p+="\\b"+keywords[keywords.length-1]+"\\b";
+		Pattern pat=Pattern.compile(p);
+		Matcher mat=pat.matcher(s);
+		String sub[]=s.split(p);
+		</font><font color=navy><b>int</b></font><font color=blue> cnt=0;
+		</font><font color=navy><b>while</b></font><font color=blue>(mat.find()) {
+			result+=sub[cnt++];
+			result+=getHighlight(mat.group());
+		}
+		</font><font color=navy><b>if</b></font><font color=blue>(sub.length&gtcnt) {
+			result+=sub[cnt];
+		}
+		</font><font color=navy><b>return</b></font><font color=blue> result;
+	}
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> </font><font color=navy><b>void</b></font><font color=blue> fileCheck (String in,String out) </font><font color=navy><b>throws</b></font><font color=blue> FileCheckError {
+		sourceFile=</font><font color=navy><b>new</b></font><font color=blue> File(in);
+		</font><font color=navy><b>if</b></font><font color=blue>(!sourceFile.exists()) {
+			</font><font color=navy><b>throw</b></font><font color=blue> </font><font color=navy><b>new</b></font><font color=blue> FileCheckError(0,in);
+		}
+		</font><font color=navy><b>else</b></font><font color=blue> </font><font color=navy><b>if</b></font><font color=blue>(!Pattern.matches(".+\\.java$", in)) {
+			</font><font color=navy><b>throw</b></font><font color=blue> </font><font color=navy><b>new</b></font><font color=blue> FileCheckError(2,in);
+		}
+		targetFile=</font><font color=navy><b>new</b></font><font color=blue> File(out);
+		</font><font color=navy><b>if</b></font><font color=blue>(targetFile.exists()) {
+			</font><font color=navy><b>throw</b></font><font color=blue> </font><font color=navy><b>new</b></font><font color=blue> FileCheckError(1,out);
+		}
+		</font><font color=navy><b>else</b></font><font color=blue> </font><font color=navy><b>if</b></font><font color=blue>(!Pattern.matches(".+\\.html|.+\\.htm", out)){
+			</font><font color=navy><b>throw</b></font><font color=blue> </font><font color=navy><b>new</b></font><font color=blue> FileCheckError(3,out);
+		}
+		</font><font color=navy><b>else</b></font><font color=blue> {
+			</font><font color=navy><b>try</b></font><font color=blue> {
+				targetFile.createNewFile();
+			}
+			</font><font color=navy><b>catch</b></font><font color=blue>(Exception e) {
+				System.out.println(e.toString());
+			}
+		}
+	}
+	</font><font color=navy><b>private</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> </font><font color=navy><b>void</b></font><font color=blue> convert(){
+		</font><font color=navy><b>try</b></font><font color=blue> {
+			input=</font><font color=navy><b>new</b></font><font color=blue> Scanner(sourceFile);
+			output=</font><font color=navy><b>new</b></font><font color=blue> PrintWriter(targetFile);
+			output.println(Head(generalStyleColor,true,generalStyleBold,generalStyleItalic));
+			</font><font color=navy><b>while</b></font><font color=blue>(input.hasNext()) {
+				String s=input.nextLine();
+				s=preprocess(s);
+				output.println(toHtml(s,Comment));
+			}
+			output.println(Tail(true,generalStyleBold,generalStyleItalic));
+			input.close();
+			output.close();
+		}		
+		</font><font color=navy><b>catch</b></font><font color=blue>(Exception e) {
+			System.out.println(e.toString());
+		}
+	}
+	</font><font color=navy><b>public</b></font><font color=blue> </font><font color=navy><b>static</b></font><font color=blue> </font><font color=navy><b>void</b></font><font color=blue> main(String args[]) {
+		</font><font color=navy><b>try</b></font><font color=blue> {
+			</font><font color=navy><b>if</b></font><font color=blue>(args.length==2) {
+				fileCheck(args[0],args[1]);
+				convert();
+			}
+			</font><font color=navy><b>else</b></font><font color=blue> {
+				displayUsage();
+			}
+		}
+		</font><font color=navy><b>catch</b></font><font color=blue>(Exception e) {
+			System.out.println(e.toString());
+		}
+	}
+}
+</font></pre></body></html>
