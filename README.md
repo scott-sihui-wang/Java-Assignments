@@ -6,8 +6,10 @@ For example, `ConvertNHighlighting` requires us to:
 
 - Read and parse Java codes, and
 
-- generate an HTML document which should be able to display `Java key words` in `dark blue`, `plain text` in `blue`, and `comment` in `green`.
+- generate an HTML document which should be able to display `Java key words` in `dark blue`, `plain text` in `blue`, and `comments` in `green`.
 
 The code can be found at `ConvertNHighlighting > src `. Below shows the result:
 
 ![ConvertNHighlighting](/Asset/output.png)
+
+
