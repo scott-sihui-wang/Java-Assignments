@@ -1,5 +1,7 @@
 # Java-Assignments
 
+**Skills:** _Java_
+
 This is a collection of assignments that I completed in the course of `Java Programming`.
 
 For example, `ConvertNHighlighting` requires us to:
